@@ -36,4 +36,17 @@ defmodule Slax.Chat do
     |> preload(:user)
     |> Repo.all()
   end
+
+  def change_message(message, attrs \\ %{}, scope) do
+    Message.changeset(message, attrs, scope)
+  end
+
+  def create_message(room, attrs, scope) do
+    with {:ok, message} <-
+           %Message{room: room}
+           |> Message.changeset(attrs, scope)
+           |> Repo.insert() do
+      {:ok, Repo.preload(message, :user)}
+    end
+  end
 end
