@@ -30,7 +30,7 @@ defmodule SlaxWeb.ChatRoomLive do
           <div class="flex flex-col gap-1.5">
             <h1 class="text-sm font-bold leading-none">
               #{@room.name}
-              
+
               <.link
                 class="font-normal text-xs text-blue-600 hover:text-blue-700"
                 navigate={~p"/rooms/#{@room}/edit"}
@@ -49,6 +49,15 @@ defmodule SlaxWeb.ChatRoomLive do
               <% end %>
             </div>
           </div>
+          <ul class="relative z-10 flex items-center gap-4 justify-end">
+            <li class="text-sm">{@current_scope.user.email}</li>
+            <li><.link href={~p"/users/settings"} class="text-sm font-semibold">Settings</.link></li>
+            <li>
+              <.link href={~p"/users/log-out"} method="delete" class="text-sm font-semibold">
+                Log out
+              </.link>
+            </li>
+          </ul>
         </div>
       </div>
     </Layouts.app>
