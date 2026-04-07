@@ -116,6 +116,7 @@ defmodule SlaxWeb.ChatRoomLive do
 
   defp message_timestamp(message) do
     message.inserted_at
+    |> Timex.format!("%-l:%M %p", :strftime)
   end
 
   attr :active, :boolean, required: true
