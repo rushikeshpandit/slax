@@ -102,6 +102,7 @@ defmodule SlaxWeb.ChatRoomLive do
           <.link class="text-sm font-semibold hover:underline">
             <span>{username(@message.user)}</span>
           </.link>
+          <span class="ml-1 text-xs text-gray-500">{message_timestamp(@message)}</span>
           <p class="text-sm">{@message.body}</p>
         </div>
       </div>
@@ -111,6 +112,10 @@ defmodule SlaxWeb.ChatRoomLive do
 
   defp username(user) do
     user.email |> String.split("@") |> List.first() |> String.capitalize()
+  end
+
+  defp message_timestamp(message) do
+    message.inserted_at
   end
 
   attr :active, :boolean, required: true
@@ -158,7 +163,7 @@ defmodule SlaxWeb.ChatRoomLive do
        page_title: "#" <> room.name,
        room: room
      )
-     |> stream(:messages, messages)
+     |> stream(:messages, messages, reset: true)
      |> assign_message_form(Chat.change_message(%Message{}, %{}, socket.assigns.current_scope))}
   end
 
@@ -173,7 +178,7 @@ defmodule SlaxWeb.ChatRoomLive do
       case Chat.create_message(room, message_params, current_scope) do
         {:ok, message} ->
           socket
-          |> stream(:messages, messages, reset: true)
+          |> stream_insert(:messages, message)
           |> assign_message_form(Chat.change_message(%Message{}, %{}, current_scope))
 
         {:error, changeset} ->
