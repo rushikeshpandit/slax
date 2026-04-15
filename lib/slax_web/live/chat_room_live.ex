@@ -103,10 +103,10 @@ defmodule SlaxWeb.ChatRoomLive do
 
   defp message(assigns) do
     ~H"""
-    <div id={@dom_id} class="relative flex px-4 py-3">
+    <div id={@dom_id} class="group relative flex px-4 py-3">
       <button
         :if={@current_user.id == @message.user_id}
-        class="absolute top-4 right-4 text-red-500 hover:text-red-800 cursor-pointer"
+        class="absolute top-4 right-4 text-red-500 hover:text-red-800 cursor-pointer hidden group-hover:block"
         data-confirm="Are you sure?"
         phx-click="delete-message"
         phx-value-id={@message.id}
@@ -220,7 +220,6 @@ defmodule SlaxWeb.ChatRoomLive do
 
     {:noreply, assign_message_form(socket, changeset)}
   end
-
 
   def handle_event("delete-message", %{"id" => id}, socket) do
     {:ok, message} = Chat.delete_message_by_id(id, socket.assigns.current_scope)
