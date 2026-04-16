@@ -14,6 +14,7 @@ defmodule Slax.Application do
       {Phoenix.PubSub, name: Slax.PubSub},
       # Start a worker by calling: Slax.Worker.start_link(arg)
       # {Slax.Worker, arg},
+      SlaxWeb.Presence,
       # Start to serve requests, typically the last entry
       SlaxWeb.Endpoint
     ]
