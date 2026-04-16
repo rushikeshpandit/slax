@@ -60,7 +60,12 @@ defmodule SlaxWeb.ChatRoomLive do
             </li>
           </ul>
         </div>
-        <div id="room-messages" class="flex flex-col grow overflow-auto" phx-update="stream">
+        <div
+          id="room-messages"
+          class="flex flex-col grow overflow-auto"
+          phx-update="stream"
+          phx-hook=".RoomMessages"
+        >
           <.message
             :for={{dom_id, message} <- @streams.messages}
             current_user={@current_scope.user}
@@ -85,6 +90,7 @@ defmodule SlaxWeb.ChatRoomLive do
               placeholder={"Message ##{@room.name}"}
               phx-debounce
               rows="1"
+              phx-hook=".ChatMessageTextArea"
             >{Phoenix.HTML.Form.normalize_value("textarea", @new_message_form[:body].value)}</textarea>
             <button class="shrink flex items-center justify-center h-6 w-6 rounded hover:bg-slate-200">
               <.icon name="hero-paper-airplane" class="h-4 w-4" />
@@ -93,6 +99,31 @@ defmodule SlaxWeb.ChatRoomLive do
         </div>
       </div>
     </Layouts.app>
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".RoomMessages">
+         export default {
+        mounted() {
+          this.el.scrollTop = this.el.scrollHeight;
+          this.handleEvent("scroll_messages_to_bottom", () => {
+            this.el.scrollTop = this.el.scrollHeight;
+          });
+        }
+      }
+    </script>
+
+    <script :type={Phoenix.LiveView.ColocatedHook} name=".ChatMessageTextArea">
+      export default {
+        mounted() {
+          this.el.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              const form = document.getElementById("new-message-form");
+
+              this.el.dispatchEvent(new Event("change", {bubbles: true, cancelable: true}));
+              form.dispatchEvent(new Event("submit", {bubbles: true, cancelable: true}));
+            }
+          });
+        }
+      }
+    </script>
     """
   end
 
@@ -190,7 +221,8 @@ defmodule SlaxWeb.ChatRoomLive do
        room: room
      )
      |> stream(:messages, messages, reset: true)
-     |> assign_message_form(Chat.change_message(%Message{}, %{}, socket.assigns.current_scope))}
+     |> assign_message_form(Chat.change_message(%Message{}, %{}, socket.assigns.current_scope))
+     |> push_event("scroll_messages_to_bottom", %{})}
   end
 
   defp assign_message_form(socket, changeset) do
@@ -229,7 +261,12 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   def handle_info({:new_message, message}, socket) do
-    {:noreply, stream_insert(socket, :messages, message)}
+    socket =
+      socket
+      |> stream_insert(:messages, message)
+      |> push_event("scroll_messages_to_bottom", %{})
+
+    {:noreply, socket}
   end
 
   def handle_info({:message_deleted, message}, socket) do
