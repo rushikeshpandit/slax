@@ -320,8 +320,15 @@ defmodule SlaxWeb.ChatRoomLive do
 
     room = params |> Map.fetch!("id") |> Chat.get_room!()
 
-    messages = Chat.list_messages_in_room(room)
+    last_read_at = Chat.get_last_read_at(room, socket.assigns.current_scope.user)
+
+    messages =
+      room
+      |> Chat.list_messages_in_room()
+      |> maybe_insert_unread_marker(last_read_at)
+
     Chat.subscribe_to_room(room)
+    Chat.update_last_read_at(room, socket.assigns.current_scope.user)
 
     {:noreply,
      socket
@@ -412,5 +419,18 @@ defmodule SlaxWeb.ChatRoomLive do
     JS.toggle(to: "#users-toggler-chevron-down")
     |> JS.toggle(to: "#users-toggler-chevron-right")
     |> JS.toggle(to: "#users-list")
+  end
+
+  defp maybe_insert_unread_marker(messages, nil), do: messages
+
+  defp maybe_insert_unread_marker(messages, last_read_at) do
+    {read, unread} =
+      Enum.split_while(messages, &(DateTime.compare(&1.inserted_at, last_read_at) != :gt))
+
+    if unread == [] do
+      read
+    else
+      read ++ [:unread_marker | unread]
+    end
   end
 end
