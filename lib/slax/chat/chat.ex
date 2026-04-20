@@ -145,4 +145,27 @@ defmodule Slax.Chat do
         nil
     end
   end
+
+  def list_joined_rooms_with_unread_counts(%User{} = user) do
+    from(
+      # From all rooms:
+      room in Room,
+      # Select only those rooms for which the user has a membership:
+      join: membership in assoc(room, :memberships),
+      where: membership.user_id == ^user.id,
+
+      # Additionally select the unread messages in those rooms. Use 'left_join'
+      # so that we don't remove rooms which have no unread messages.
+      left_join: message in assoc(room, :messages),
+      on: message.inserted_at > membership.last_read_at,
+
+      # Select the room, plus each room's unread message count:
+      group_by: room.id,
+      select: {room, count(message.id)},
+
+      # Order the results by room name:
+      order_by: [asc: room.name]
+    )
+    |> Repo.all()
+  end
 end
