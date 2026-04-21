@@ -52,11 +52,11 @@ defmodule SlaxWeb.ChatRoomLive do
                     Browse rooms
                   </.link>
                   <.link
-                  class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 hover:bg-sky-600"
-                  phx-click={show_modal("new-room-modal")}
-                >
-                  Create a new room
-                </.link>
+                    class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 hover:bg-sky-600"
+                    phx-click={show_modal("new-room-modal")}
+                  >
+                    Create a new room
+                  </.link>
                 </div>
               </div>
             </div>
@@ -209,7 +209,19 @@ defmodule SlaxWeb.ChatRoomLive do
     </script>
     <.modal id="new-room-modal">
       <.header>New chat room</.header>
-      (Form goes here)
+      <.form
+        for={@new_room_form}
+        id="room-form"
+        phx-change="validate-room"
+        phx-submit="save-room"
+        class="mt-10 space-y-8"
+      >
+        <.input field={@new_room_form[:name]} type="text" label="Name" phx-debounce />
+        <.input field={@new_room_form[:topic]} type="text" label="Topic" phx-debounce />
+        <div>
+          <.button phx-disable-with="Saving..." class="w-full">Save</.button>
+        </div>
+      </.form>
     </.modal>
     """
   end
@@ -351,6 +363,7 @@ defmodule SlaxWeb.ChatRoomLive do
       socket
       |> assign(rooms: rooms, timezone: timezone, users: users)
       |> assign(online_users: OnlineUsers.list())
+      |> assign_room_form(Chat.change_room(%Room{}))
       |> stream_configure(:messages,
         dom_id: fn
           %Message{id: id} -> "messages-#{id}"
@@ -362,7 +375,6 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   def handle_params(params, _uri, socket) do
-
     room = params |> Map.fetch!("id") |> Chat.get_room!()
 
     last_read_at = Chat.get_last_read_at(room, socket.assigns.current_scope.user)
@@ -438,41 +450,67 @@ defmodule SlaxWeb.ChatRoomLive do
     current_user = socket.assigns.current_scope.user
     Chat.join_room!(socket.assigns.room, current_user)
     Chat.subscribe_to_room(socket.assigns.room)
+
     socket =
       assign(socket,
         joined?: true,
         rooms: Chat.list_joined_rooms_with_unread_counts(current_user)
       )
+
     {:noreply, socket}
   end
 
-  def handle_info({:new_message, message}, socket) do
-  room = socket.assigns.room
+  def handle_event("validate-room", %{"room" => room_params}, socket) do
+    changeset =
+      %Room{}
+      |> Chat.change_room(room_params)
+      |> Map.put(:action, :validate)
 
-  socket =
-    cond do
-      message.room_id == room.id ->
-        Chat.update_last_read_at(room, socket.assigns.current_scope.user)
+    {:noreply, assign_room_form(socket, changeset)}
+  end
 
-        socket
-        |> stream_insert(:messages, message)
-        |> push_event("scroll_messages_to_bottom", %{})
+  def handle_event("save-room", %{"room" => room_params}, socket) do
+    case Chat.create_room(room_params) do
+      {:ok, room} ->
+        Chat.join_room!(room, socket.assigns.current_scope.user)
 
-      message.user_id != socket.assigns.current_scope.user.id ->
-        update(socket, :rooms, fn rooms ->
-          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          Enum.map(rooms, fn
-            {%Room{id: id} = room, count} when id == message.room_id -> {room, count + 1}
-            other -> other
-          end)
-        end)
+        {:noreply,
+         socket
+         |> put_flash(:info, "Created room")
+         |> push_navigate(to: ~p"/rooms/#{room}")}
 
-      true ->
-        socket
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, assign_room_form(socket, changeset)}
     end
+  end
 
-  {:noreply, socket}
-end
+  def handle_info({:new_message, message}, socket) do
+    room = socket.assigns.room
+
+    socket =
+      cond do
+        message.room_id == room.id ->
+          Chat.update_last_read_at(room, socket.assigns.current_scope.user)
+
+          socket
+          |> stream_insert(:messages, message)
+          |> push_event("scroll_messages_to_bottom", %{})
+
+        message.user_id != socket.assigns.current_scope.user.id ->
+          update(socket, :rooms, fn rooms ->
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+            Enum.map(rooms, fn
+              {%Room{id: id} = room, count} when id == message.room_id -> {room, count + 1}
+              other -> other
+            end)
+          end)
+
+        true ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
 
   def handle_info({:message_deleted, message}, socket) do
     {:noreply, stream_delete(socket, :messages, message)}
@@ -507,5 +545,9 @@ end
     else
       read ++ [:unread_marker | unread]
     end
+  end
+
+  defp assign_room_form(socket, changeset) do
+    assign(socket, :new_room_form, to_form(changeset))
   end
 end
