@@ -4,6 +4,8 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
 
   alias Slax.Chat
 
+  import SlaxWeb.RoomComponents
+
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
@@ -20,19 +22,7 @@ defmodule SlaxWeb.ChatRoomLive.Edit do
           </:actions>
         </.header>
 
-        <.form
-          for={@form}
-          id="room-form"
-          class="mt-10 space-y-8"
-          phx-change="validate-room"
-          phx-submit="save-room"
-        >
-          <.input field={@form[:name]} type="text" label="Name" phx-debounce={500} />
-          <.input field={@form[:topic]} type="text" label="Topic" phx-debounce={500} />
-          <div class="mt-2 flex items-center justify-between gap-6">
-            <.button phx-disable-with="Saving..." class="btn btn-primary w-full">Save</.button>
-          </div>
-        </.form>
+        <.room_form form={@form} />
       </div>
     </Layouts.app>
     """

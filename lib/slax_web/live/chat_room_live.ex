@@ -9,6 +9,8 @@ defmodule SlaxWeb.ChatRoomLive do
   alias Slax.Chat.Room
   alias SlaxWeb.OnlineUsers
 
+  import SlaxWeb.RoomComponents
+
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash}>
@@ -207,21 +209,13 @@ defmodule SlaxWeb.ChatRoomLive do
         }
       }
     </script>
-    <.modal id="new-room-modal" show={@live_action == :new} on_cancel={JS.navigate(~p"/rooms/#{@room}")}>
+    <.modal
+      id="new-room-modal"
+      show={@live_action == :new}
+      on_cancel={JS.navigate(~p"/rooms/#{@room}")}
+    >
       <.header>New chat room</.header>
-      <.form
-        for={@new_room_form}
-        id="room-form"
-        phx-change="validate-room"
-        phx-submit="save-room"
-        class="mt-10 space-y-8"
-      >
-        <.input field={@new_room_form[:name]} type="text" label="Name" phx-debounce />
-        <.input field={@new_room_form[:topic]} type="text" label="Topic" phx-debounce />
-        <div>
-          <.button phx-disable-with="Saving..." class="w-full">Save</.button>
-        </div>
-      </.form>
+      <.room_form form={@new_room_form} />
     </.modal>
     """
   end
