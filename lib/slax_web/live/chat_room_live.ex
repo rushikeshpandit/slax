@@ -51,6 +51,12 @@ defmodule SlaxWeb.ChatRoomLive do
                   >
                     Browse rooms
                   </.link>
+                  <.link
+                  class="block select-none cursor-pointer whitespace-nowrap text-gray-800 hover:text-white px-6 py-1 hover:bg-sky-600"
+                  phx-click={show_modal("new-room-modal")}
+                >
+                  Create a new room
+                </.link>
                 </div>
               </div>
             </div>
@@ -201,6 +207,10 @@ defmodule SlaxWeb.ChatRoomLive do
         }
       }
     </script>
+    <.modal id="new-room-modal">
+      <.header>New chat room</.header>
+      (Form goes here)
+    </.modal>
     """
   end
 
@@ -324,7 +334,7 @@ defmodule SlaxWeb.ChatRoomLive do
   end
 
   def mount(_params, _session, socket) do
-    rooms = Chat.list_joined_rooms_with_unread_counts(socket.assigns.current_scope.user)rooms = Chat.list_joined_rooms(socket.assigns.current_scope.user)
+    rooms = Chat.list_joined_rooms_with_unread_counts(socket.assigns.current_scope.user)
     users = Accounts.list_users()
 
     timezone = get_connect_params(socket)["timezone"]
