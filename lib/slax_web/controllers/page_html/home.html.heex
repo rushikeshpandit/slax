@@ -56,9 +56,11 @@
       <Layouts.theme_toggle />
     </div>
 
-    <p class="text-[2rem] mt-4 font-semibold leading-10 tracking-tighter text-balance">
-      Peace of mind from prototype to production.
-    </p>
+    <%= if @current_scope && @current_scope.user do %>
+        Welcome, {@current_scope.user.username}!
+      <% else %>
+        Welcome!
+      <% end %>
     <p class="mt-4 leading-7 text-base-content/70">
       Build rich, interactive web applications quickly, with less code and fewer moving parts. Join our growing community of developers using Phoenix to craft APIs, HTML5 apps and more, for fun or at scale.
     </p>
