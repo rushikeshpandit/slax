@@ -298,4 +298,8 @@ defmodule Slax.Accounts do
   def list_users do
     Repo.all(from u in User, order_by: [asc: u.email])
   end
+
+  def change_user_registration(%User{} = user, attrs \\ %{}) do
+    User.registration_changeset(user, attrs, validate_unique: false)
+  end
 end
