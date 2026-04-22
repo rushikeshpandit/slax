@@ -8,7 +8,7 @@ defmodule SlaxWeb.UserLive.Registration do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
+      <div class="mx-auto w-96 mt-16">
         <div class="text-center">
           <.header>
             Register for an account

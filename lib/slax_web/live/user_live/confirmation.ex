@@ -7,7 +7,7 @@ defmodule SlaxWeb.UserLive.Confirmation do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
+      <div class="mx-auto w-96 mt-16">
         <div class="text-center">
           <.header>Welcome {@user.email}</.header>
         </div>

@@ -162,8 +162,4 @@ defmodule Slax.Accounts.User do
       changeset
     end
   end
-
-  def change_user_registration(%User{} = user, attrs \\ %{}) do
-    User.registration_changeset(user, attrs, validate_unique: false)
-  end
 end
