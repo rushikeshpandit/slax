@@ -135,4 +135,35 @@ defmodule Slax.Accounts.User do
     Bcrypt.no_user_verify()
     false
   end
+
+  def registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :username])
+    |> validate_email(opts)
+    |> validate_username(opts)
+  end
+
+  defp validate_username(changeset, opts) do
+    changeset
+    |> validate_required([:username])
+    |> validate_format(:username, ~r/^[A-Za-z0-9-]+$/,
+      message: "can only contain letters, numbers and dashes"
+    )
+    |> validate_length(:username, max: 20)
+    |> maybe_validate_unique_username(opts)
+  end
+
+  defp maybe_validate_unique_username(changeset, opts) do
+    if Keyword.get(opts, :validate_unique, true) do
+      changeset
+      |> unsafe_validate_unique(:username, Slax.Repo)
+      |> unique_constraint(:username)
+    else
+      changeset
+    end
+  end
+
+  def change_user_registration(%User{} = user, attrs \\ %{}) do
+    User.registration_changeset(user, attrs, validate_unique: false)
+  end
 end
