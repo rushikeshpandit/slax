@@ -7,7 +7,7 @@ defmodule SlaxWeb.UserLive.Login do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-       <div class="mx-auto w-96 mt-16 space-y-4">
+      <div class="mx-auto w-96 mt-16 space-y-4">
         <div class="text-center">
           <.header>
             <p>Log in</p>
@@ -68,10 +68,10 @@ defmodule SlaxWeb.UserLive.Login do
         >
           <.input
             readonly={!!@current_scope}
-            field={f[:email]}
-            type="email"
-            label="Email"
-            autocomplete="email"
+            field={f[:email_or_username]}
+            type="text"
+            label="Email or username"
+            autocomplete="username"
             required
           />
           <.input
@@ -98,7 +98,9 @@ defmodule SlaxWeb.UserLive.Login do
       Phoenix.Flash.get(socket.assigns.flash, :email) ||
         get_in(socket.assigns, [:current_scope, Access.key(:user), Access.key(:email)])
 
-    form = to_form(%{"email" => email}, as: "user")
+    email_or_username = Phoenix.Flash.get(socket.assigns.flash, :email_or_username) || email
+
+    form = to_form(%{"email" => email, "email_or_username" => email_or_username}, as: "user")
 
     {:ok, assign(socket, form: form, trigger_submit: false)}
   end
