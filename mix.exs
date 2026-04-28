@@ -71,7 +71,8 @@ defmodule Slax.MixProject do
       {:timex, "~> 3.7"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:faker, "~> 0.19.0-alpha.1", only: :dev}
     ]
   end
 
