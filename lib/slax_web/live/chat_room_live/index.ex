@@ -7,8 +7,14 @@ defmodule SlaxWeb.ChatRoomLive.Index do
     ~H"""
     <Layouts.app flash={@flash}>
       <main class="flex-1 p-6 max-w-4xl mx-auto">
-        <div class="mb-4">
+        <div class="flex justify-between mb-4 items-center">
           <h1 class="text-xl font-semibold">{@page_title}</h1>
+          <button
+            phx-click={show_modal("new-room-modal")}
+            class="bg-white font-semibold py-2 px-4 border border-slate-400 rounded shadow-sm"
+          >
+            Create room
+          </button>
         </div>
         <div class="bg-slate-100 border border-slate-300 rounded">
           <div id="rooms" class="divide-y" phx-update="stream">
@@ -57,6 +63,15 @@ defmodule SlaxWeb.ChatRoomLive.Index do
         </div>
       </main>
     </Layouts.app>
+
+    <.modal id="new-room-modal">
+      <.header>New chat room</.header>
+
+      <.live_component
+        module={SlaxWeb.ChatRoomLive.FormComponent}
+        id="new-room-form-component"
+      />
+    </.modal>
     """
   end
 
