@@ -36,4 +36,22 @@ defmodule SlaxWeb.ChatRoomLive.FormComponent do
     |> assign_form(changeset)
     |> noreply()
   end
+
+  def handle_event("save-room", %{"room" => room_params}, socket) do
+    case Chat.create_room(room_params) do
+      {:ok, room} ->
+        Chat.join_room!(room, socket.assigns.current_user)
+
+        socket
+        |> put_flash(:info, "Created room")
+        |> push_navigate(to: ~p"/rooms/#{room}")
+        |> noreply()
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        socket
+        |> assign_form(changeset)
+        |> noreply()
+    end
+  end
+
 end
