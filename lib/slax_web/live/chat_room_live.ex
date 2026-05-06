@@ -225,6 +225,10 @@ defmodule SlaxWeb.ChatRoomLive do
       <% end %>
     </Layouts.app>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".RoomMessages">
+      import { init, Picker } from 'emoji-mart'
+      import data from '@emoji-mart/data'
+
+      init({ data })
          export default {
         mounted() {
           this.el.scrollTop = this.el.scrollHeight;
@@ -257,6 +261,40 @@ defmodule SlaxWeb.ChatRoomLive do
               avatar.src = `/uploads/${avatar_path}`;
             });
           });
+
+          this.el.addEventListener("show_emoji_picker", e => {
+              const picker = new Picker({
+                onEmojiSelect: (selection) => {
+                  this.pushEvent("add-reaction", {
+                    emoji: selection.native,
+                    message_id: e.detail.message_id,
+                  });
+
+                  this.closePicker()
+                },
+                onClickOutside: () => this.closePicker(),
+              });
+              picker.id = "emoji-picker";
+              const wrapper = document.getElementById("emoji-picker-wrapper");
+              wrapper.appendChild(picker)
+              const message = document.getElementById(`messages-${e.detail.message_id}`)
+              const rect = message.getBoundingClientRect();
+
+              if (rect.top + wrapper.clientHeight > window.innerHeight) {
+                wrapper.style.bottom = `20px`;
+              } else {
+                wrapper.style.top = `${rect.top}px`;
+              }
+              wrapper.style.right = '50px';
+            });
+          },
+
+          closePicker() {
+            const picker = document.getElementById('emoji-picker');
+            if (picker) {
+              picker.parentNode.removeChild(picker);
+            }
+
         }
       }
     </script>
@@ -273,6 +311,7 @@ defmodule SlaxWeb.ChatRoomLive do
         current_user={@current_scope.user}
       />
     </.modal>
+    <div id="emoji-picker-wrapper" class="absolute" phx-update="ignore"></div>
     """
   end
 
@@ -472,8 +511,6 @@ defmodule SlaxWeb.ChatRoomLive do
     {:noreply, socket}
   end
 
-
-
   def handle_event("load-more-messages", _, socket) do
     page =
       Chat.list_messages_in_room(
@@ -637,7 +674,6 @@ defmodule SlaxWeb.ChatRoomLive do
     |> refresh_message(message)
     |> noreply()
   end
-
 
   defp maybe_update_current_user(socket, user) do
     if socket.assigns.current_scope.user.id == user.id do
