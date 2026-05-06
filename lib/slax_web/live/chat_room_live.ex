@@ -456,6 +456,24 @@ defmodule SlaxWeb.ChatRoomLive do
     assign(socket, :new_message_form, to_form(changeset))
   end
 
+  def handle_event("add-reaction", %{"emoji" => emoji, "message_id" => message_id}, socket) do
+    message = Chat.get_message!(message_id)
+
+    Chat.add_reaction(emoji, message, socket.assigns.current_scope.user)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove-reaction", %{"message_id" => message_id, "emoji" => emoji}, socket) do
+    message = Chat.get_message!(message_id)
+
+    Chat.remove_reaction(emoji, message, socket.assigns.current_scope.user)
+
+    {:noreply, socket}
+  end
+
+
+
   def handle_event("load-more-messages", _, socket) do
     page =
       Chat.list_messages_in_room(
@@ -603,6 +621,23 @@ defmodule SlaxWeb.ChatRoomLive do
     |> push_event("update_avatar", %{user_id: user.id, avatar_path: user.avatar_path})
     |> noreply()
   end
+
+  def handle_info({:added_reaction, reaction}, socket) do
+    message = Chat.get_message!(reaction.message_id)
+
+    socket
+    |> refresh_message(message)
+    |> noreply()
+  end
+
+  def handle_info({:removed_reaction, reaction}, socket) do
+    message = Chat.get_message!(reaction.message_id)
+
+    socket
+    |> refresh_message(message)
+    |> noreply()
+  end
+
 
   defp maybe_update_current_user(socket, user) do
     if socket.assigns.current_scope.user.id == user.id do
