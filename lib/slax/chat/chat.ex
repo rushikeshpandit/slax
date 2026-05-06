@@ -12,6 +12,8 @@ defmodule Slax.Chat do
 
   @pubsub Slax.PubSub
 
+  @room_page_size 10
+
   def list_rooms do
     Repo.all(from Room, order_by: [asc: :name])
   end
@@ -94,13 +96,17 @@ defmodule Slax.Chat do
     )
   end
 
-  def list_rooms_with_joined(%User{} = user) do
+  def list_rooms_with_joined(page, %User{} = user) do
+    offset = (page - 1) * @room_page_size
+
     query =
       from r in Room,
         left_join: m in RoomMembership,
         on: r.id == m.room_id and m.user_id == ^user.id,
         select: {r, not is_nil(m.id)},
-        order_by: [asc: :name]
+        order_by: [asc: :name],
+        limit: ^@room_page_size,
+        offset: ^offset
 
     Repo.all(query)
   end
@@ -212,5 +218,9 @@ defmodule Slax.Chat do
 
       {:ok, reply}
     end
+  end
+
+  def count_room_pages do
+    ceil(Repo.aggregate(Room, :count) / @room_page_size)
   end
 end
