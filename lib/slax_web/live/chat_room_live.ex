@@ -201,7 +201,12 @@ defmodule SlaxWeb.ChatRoomLive do
         </div>
       </div>
       <%= if assigns[:profile] do %>
-        <.live_component id="profile" module={SlaxWeb.ChatRoomLive.ProfileComponent} user={@profile} />
+        <.live_component
+          id="profile"
+          module={SlaxWeb.ChatRoomLive.ProfileComponent}
+          user={@profile}
+          current_user={@current_scope.user}
+        />
       <% end %>
     </Layouts.app>
     <script :type={Phoenix.LiveView.ColocatedHook} name=".RoomMessages">

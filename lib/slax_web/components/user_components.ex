@@ -5,7 +5,7 @@ defmodule SlaxWeb.UserComponents do
   alias Slax.Accounts.User
 
   attr :user, User
-  attr :rest, :global
+  attr :rest, :global, include: ["action"]
 
   def user_avatar(assigns) do
     ~H"""
