@@ -306,4 +306,10 @@ defmodule Slax.Accounts do
   def change_user_registration(%User{} = user, attrs \\ %{}) do
     User.registration_changeset(user, attrs, validate_unique: false)
   end
+
+  def save_user_avatar_path(user, avatar_path) do
+    user
+    |> User.avatar_changeset(%{avatar_path: avatar_path})
+    |> Repo.update()
+  end
 end

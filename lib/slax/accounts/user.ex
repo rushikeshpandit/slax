@@ -12,6 +12,7 @@ defmodule Slax.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :avatar_path, :string
 
     many_to_many :rooms, Room, join_through: RoomMembership
 
@@ -161,5 +162,10 @@ defmodule Slax.Accounts.User do
     else
       changeset
     end
+  end
+
+  def avatar_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:avatar_path])
   end
 end
