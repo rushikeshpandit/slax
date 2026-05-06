@@ -196,4 +196,21 @@ defmodule Slax.Chat do
       Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:deleted_reply, message})
     end
   end
+
+  def change_reply(reply, attrs \\ %{}, scope) do
+    Reply.changeset(reply, attrs, scope)
+  end
+
+  def create_reply(%Message{} = message, attrs, scope) do
+    with {:ok, reply} <-
+           %Reply{message: message}
+           |> Reply.changeset(attrs, scope)
+           |> Repo.insert() do
+      message = get_message!(reply.message_id)
+
+      Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:new_reply, message})
+
+      {:ok, reply}
+    end
+  end
 end
