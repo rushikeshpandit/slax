@@ -122,15 +122,6 @@ defmodule SlaxWeb.ChatRoomLive do
             </li>
           </ul>
         </div>
-        <div :if={@message_cursor} class="flex justify-around my-2">
-        <button
-          id="load-more-button"
-          phx-click="load-more-messages"
-          class="border border-green-200 bg-green-50 py-1 px-3 rounded"
-        >
-          Load more
-        </button>
-      </div>
         <div
           id="room-messages"
           class="flex flex-col grow overflow-auto"
@@ -239,6 +230,24 @@ defmodule SlaxWeb.ChatRoomLive do
           this.el.scrollTop = this.el.scrollHeight;
           this.handleEvent("scroll_messages_to_bottom", () => {
             this.el.scrollTop = this.el.scrollHeight;
+          });
+
+      this.canLoadMore = true;
+
+          this.el.addEventListener("scroll", _e => {
+            if (this.canLoadMore && this.el.scrollTop < 100) {
+              this.canLoadMore = false;
+              const prevHeight = this.el.scrollHeight;
+
+              this.pushEvent("load-more-messages", {}, (reply) => {
+                this.el.scrollTo(0, this.el.scrollHeight - prevHeight);
+                this.canLoadMore = reply.can_load_more;
+              });
+            }
+          })
+
+          this.handleEvent("reset_pagination", ({can_load_more}) => {
+            this.canLoadMore = can_load_more;
           });
 
           this.handleEvent("update_avatar", ({user_id, avatar_path}) => {
@@ -417,6 +426,7 @@ defmodule SlaxWeb.ChatRoomLive do
     |> stream(:messages, [], reset: true)
     |> stream_message_page(page)
     |> assign_message_form(Chat.change_message(%Message{}, %{}, socket.assigns.current_scope))
+    |> push_event("reset_pagination", %{can_load_more: !is_nil(page.metadata.after)})
     |> push_event("scroll_messages_to_bottom", %{})
     |> update(:rooms, fn rooms ->
       room_id = room.id
@@ -455,10 +465,9 @@ defmodule SlaxWeb.ChatRoomLive do
 
     socket
     |> stream_message_page(page)
-    |> noreply()
+    |> reply(%{can_load_more: !is_nil(page.metadata.after)})
   end
 
-  
   def handle_event("submit-message", %{"message" => message_params}, socket) do
     %{current_scope: current_scope, room: room} = socket.assigns
 
