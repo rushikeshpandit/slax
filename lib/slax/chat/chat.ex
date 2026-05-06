@@ -179,9 +179,21 @@ defmodule Slax.Chat do
     |> Repo.one!()
   end
 
-   defp preload_message_user_and_replies(message_query) do
+  defp preload_message_user_and_replies(message_query) do
     replies_query = from r in Reply, order_by: [asc: :inserted_at, asc: :id]
 
     preload(message_query, [:user, replies: ^{replies_query, [:user]}])
+  end
+
+  def delete_reply_by_id(id, %User{id: user_id}) do
+    with %Reply{} = reply <-
+           from(r in Reply, where: r.id == ^id and r.user_id == ^user_id)
+           |> Repo.one() do
+      Repo.delete(reply)
+
+      message = get_message!(reply.message_id)
+
+      Phoenix.PubSub.broadcast!(@pubsub, topic(message.room_id), {:deleted_reply, message})
+    end
   end
 end
