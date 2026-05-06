@@ -168,4 +168,11 @@ defmodule Slax.Chat do
     )
     |> Repo.all()
   end
+
+  def get_message!(id) do
+    Message
+    |> where([m], m.id == ^id)
+    |> preload(:user)
+    |> Repo.one!()
+  end
 end
